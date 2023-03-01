@@ -1,0 +1,50 @@
+apiVersion: rbac.authorization.k8s.io/v1
+kind: ClusterRole
+metadata:
+  name: rabbitmqcluster-app-operator-reader
+  labels:
+    servicebinding.io/controller: "true"
+rules:
+- apiGroups:
+  - rabbitmq.com
+  resources:
+  - rabbitmqclusters
+  verbs:
+  - get
+  - list
+  - watch
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ClusterInstanceClass
+metadata:
+  name: rabbitmq
+spec:
+  description:
+    short: RabbitMQ Clusters
+  pool:
+    group: rabbitmq.com
+    kind: RabbitmqCluster
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ResourceClaimPolicy
+metadata:
+  name: rabbitmqcluster-cross-namespace
+  namespace: service-instances
+spec:
+  consumingNamespaces:
+  - '*'
+  subject:
+    group: rabbitmq.com
+    kind: RabbitmqCluster
+---
+apiVersion: services.apps.tanzu.vmware.com/v1alpha1
+kind: ResourceClaim
+metadata:
+  name: rmq-where-for-dinner
+  namespace: workloads
+spec:
+  ref:
+    apiVersion: rabbitmq.com/v1beta1
+    kind: RabbitmqCluster
+    name: rmq-where-for-dinner
+    namespace: service-instances
